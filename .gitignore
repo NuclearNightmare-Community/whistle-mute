@@ -5,6 +5,7 @@ build/
 *.log
 # Written by a test run next to the driver (only ever in a game instance, but never commit a stray copy)
 test/WhistleMuteDriver/Scripts/scenario.txt
+test/WhistleMuteDriver/Scripts/map.txt
 test/WhistleMuteDriver/Scripts/request.txt
 test/WhistleMuteDriver/Scripts/done.txt
 test/WhistleMuteDriver/Scripts/*.wav

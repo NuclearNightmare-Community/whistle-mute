@@ -1,0 +1,9 @@
+{
+  "id": "whistle-mute",
+  "name": "WhistleMute",
+  "version": "0.1.0",
+  "scope": "client",
+  "game": { "version": "V8.2.1", "build": "26512322" },
+  "ue4ss": "v3.0.1-1181-g83330635",
+  "dependsOn": []
+}

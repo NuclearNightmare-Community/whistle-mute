@@ -61,6 +61,10 @@ try {
     Eq ([IO.File]::ReadAllText((Join-Path $mods "$Dr\Scripts\map.txt"))) 'Forest' 'deploy -Test -Map: map.txt holds the key'
     Eq (@(Get-ChildItem (Join-Path $mods "$Dr\Scripts") -File | ForEach-Object Name | Sort-Object) -join ',') 'main.lua,map.txt,scenario.txt' 'deploy -Test: stale request/done/wav files gone'
     Eq ([IO.File]::ReadAllText((Join-Path $mods 'mods.txt'))) "CheatManagerEnablerMod : 1`r`nBPModLoaderMod : 1`r`n$Dr : 1`r`n$N : 1`r`nKeybinds : 1`r`n" 'deploy -Test: driver line right above the mod'
+    $r = Deploy $i @('-Test', '-Scenario', 'pair-listen')
+    Eq ([IO.File]::ReadAllText((Join-Path $mods "$Dr\Scripts\scenario.txt"))) 'pair-listen' 'deploy -Test -Scenario pair-listen: scenario.txt'
+    $r = Deploy $i @('-Test', '-Scenario', 'bogus')
+    Ok ($r.Code -ne 0) 'deploy -Test -Scenario bogus: refused' $r.Out
     $r = Deploy $i @('-Test')
     Ok (-not (Test-Path (Join-Path $mods "$Dr\Scripts\map.txt"))) 'deploy -Test without -Map: no map.txt'
     $r = Deploy $i @('-Test', '-Map', '..\evil')

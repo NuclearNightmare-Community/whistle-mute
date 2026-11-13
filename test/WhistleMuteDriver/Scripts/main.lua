@@ -17,8 +17,20 @@
 --            quiet2  nobody whistles
 --          check.ps1 compares them (the whistle's energy over the quiet windows' noise). Then a garbage collection
 --          and the Volume again (does the wave survive a GC with its Volume?), menu -> Volume 0 there too.
+--   pair-listen (tools/vm/pair.ps1 scenario wm-listen, test/pair/whistle-scenarios.ps1): THIS machine is the host of a
+--          friends-only lobby (PairDriver made it) with WhistleMute; the other player (the VM, vanilla) whistles on
+--          a signal. A WhistleALL post-hook logs every whistle this machine plays and whose it was (HEARD ... remote |
+--          local), so each window knows when the client's whistle landed in it. Steps: the match world, touchdown,
+--          the whistle key from the game's input mapping (KEYMAP, for pair.ps1's vm-key), the other player's
+--          character, the client's touchdown (vmkey ENTER), then five recordings: quiet1, muted (the client whistles,
+--          Volume 0), loud (the client whistles with the stock Volume put back: the control), muted2 (Volume 0
+--          again), quiet2. A whistle window asks for "vmkey whistle", waits up to PAIR_WAIT_S for the remote
+--          WhistleALL, records PAIR_TAIL_S more and stops; no remote whistle -> a new try (PAIR_TRIES in all).
+--          check.ps1 -Scenario pair-listen compares the recordings as for match. Nothing here reads anything the
+--          other player sends: the hook only asks the game whether the whistling character is this machine's.
 -- Scripts/map.txt (deploy.ps1 -Map) holds only a key of the MAPS table; no file content ever becomes a path.
--- Keys it can't press itself (Enter for touchdown) go to run.ps1 through request.txt / done.txt next to this file.
+-- Keys it can't press itself (Enter for touchdown) go to run.ps1 through request.txt / done.txt next to this file;
+-- in pair-listen to the scenario's request server (key ENTER = this game; vmkey ENTER / vmkey whistle = the VM's).
 -- Never keeps a UObject across steps: only paths, re-found each time.
 local ME = "WhistleMuteDriver"
 local WAVE = "/Game/Sounds/Whistle01.Whistle01"
@@ -29,6 +41,12 @@ local REC_S = 3.0     -- each recording's length (s); the whistle starts WHISTLE
 local WHISTLE_AT = 0.5
 local GAP_S = 1.5     -- between recordings, so one whistle's tail doesn't reach the next window
 local WAV_EXPORT = 1  -- EAudioRecordingExportType::WavFile
+local FP_CLASS = "/Game/FirstPerson/Blueprints/BP_FirstPersonCharacter.BP_FirstPersonCharacter_C"
+local PAIR_QUIET_S = 6.0  -- a quiet window's length
+local PAIR_WAIT_S = 15.0  -- how long a whistle window waits for the client's whistle (vm-key takes a few seconds)
+local PAIR_TAIL_S = 3.0   -- recorded after the client's whistle reached this machine
+local PAIR_TRIES = 3
+local PAIR_MAX_S = 30.0   -- StartRecordingOutput's buffer
 local scriptDir = (debug.getinfo(1, "S").source:gsub("^@", "")):match("^(.*)[/\\]") or "."
 
 local function say(fmt, ...) print("[" .. ME .. "] " .. string.format(fmt, ...) .. "\n") end
@@ -63,7 +81,7 @@ say("MAP %s %s", MAP_KEY, MATCH_MAP)
 local REQ, DONE = scriptDir .. "\\request.txt", scriptDir .. "\\done.txt"
 os.remove(REQ); os.remove(DONE)
 
-local S = { failures = 0, checks = 0, stock = nil, pre = {} }
+local S = { failures = 0, checks = 0, stock = nil, pre = {}, rec = nil, hooked = false }
 
 local function valid(o)
     if o == nil then return false end
@@ -245,6 +263,199 @@ local function tick()
     busy = false
 end
 
+-- ---------------------------------------------------------------- pair-listen (this machine hosts; the VM whistles)
+local function className(o)
+    local ok, n = pcall(function() return o:GetClass():GetFName():ToString() end)
+    return ok and n or nil
+end
+local function isLocal(c)
+    local ok, v = pcall(function() return c:IsLocallyControlled() end)
+    if ok and type(v) == "boolean" then return v end
+    return nil
+end
+local function distM(a, b)
+    local ok, d = pcall(function()
+        local p, q = a:K2_GetActorLocation(), b:K2_GetActorLocation()
+        local x, y, z = p.X - q.X, p.Y - q.Y, p.Z - q.Z
+        return math.sqrt(x * x + y * y + z * z) / 100
+    end)
+    return ok and type(d) == "number" and string.format("%.1f", d) or "?"
+end
+-- The other player's character: a live BP_FirstPersonCharacter_C this machine doesn't control. Found again each call.
+local function remoteChar()
+    for _, c in ipairs(FindAllOf("BP_FirstPersonCharacter_C") or {}) do
+        if valid(c) and isLocal(c) == false then return c end
+    end
+    return nil
+end
+-- WhistleALL runs on every machine for every whistle (the multicast). Its post-hook only asks whose it was.
+local function onWhistle(self)
+    local ok, err = pcall(function()
+        local c = self
+        pcall(function() local v = self:get() if v ~= nil then c = v end end)
+        local loc = isLocal(c)
+        local who = loc == true and "local" or (loc == false and "remote" or "unknown")
+        local r = S.rec
+        local t = r and (os.clock() - r.t0) or 0
+        if r and who == "remote" and not r.remote then r.remote = t end
+        local me = pawn()
+        say("HEARD %s %s at %.2f s dist=%s m", r and r.label or "none", who, t, me and distM(me, c) or "?")
+    end)
+    if not ok then say("HEARD hook error %s", tostring(err)) end
+end
+local function hookWhistle(phase)
+    step(phase .. ": hook WhistleALL", function()
+        if not S.hooked then
+            local ok, err = pcall(RegisterHook, FP_CLASS .. ":WhistleALL", onWhistle)
+            S.hooked = ok
+            check(ok, "HOOK %s WhistleALL post-hook%s", phase, ok and "" or (": " .. tostring(err)))
+        end
+    end)
+end
+-- The keys mapped to the whistle action, for pair.ps1's vm-key (UE key names; letters and digits only are logged).
+local function keymap(phase)
+    step(phase .. ": keymap", function()
+        local n = 0
+        for _, imc in ipairs(FindAllOf("InputMappingContext") or {}) do
+            if valid(imc) then
+                local okM, m = pcall(function() return imc.Mappings end)
+                local okC, count = pcall(function() return m:GetArrayNum() end)
+                for i = 1, (okM and okC and tonumber(count) or 0) do
+                    local okE, action, key = pcall(function()
+                        local e = m[i]
+                        return e.Action:GetFName():ToString(), e.Key.KeyName:ToString()
+                    end)
+                    if okE and type(action) == "string" and action:find("Whistle", 1, true) then
+                        n = n + 1
+                        local imcName = "?"
+                        pcall(function() imcName = imc:GetFName():ToString() end)
+                        say("KEYMAP %s action=%s key=%s", (imcName:gsub("[^%w_]", "")), (action:gsub("[^%w_]", "")), (tostring(key):gsub("[^%w_]", "")))
+                    end
+                end
+            end
+        end
+        say("KEYMAPS %s %d whistle mapping(s)", phase, n)
+    end)
+end
+local function waitMatch(phase, timeout)
+    step(phase .. ": match world", function()
+        return function()
+            local w = worldName()
+            if w:find("/Game/Maps/", 1, true) and not w:find("NewMainMenu", 1, true) then
+                say("WORLD %s %s", phase, w:match("/Game/[^ ]+") or "?")
+                return true
+            end
+            return false
+        end, timeout, phase .. " a match world"
+    end)
+end
+local function softTouchdown(phase)
+    step(phase .. ": touchdown", function()
+        say("TOUCHDOWN %s requesting Enter", phase)
+        local done, t = request("key ENTER"), os.clock() + 20
+        return function() return done() or os.clock() > t end, 25, "touchdown key"
+    end)
+end
+local function waitRemote(phase, timeout)
+    step(phase .. ": the other player", function()
+        local since
+        return function()
+            local c = remoteChar()
+            if c then since = since or os.clock() return os.clock() - since >= 5 end
+            since = nil
+            return false
+        end, timeout, phase .. " the other player's character"
+    end)
+    step(phase .. ": remote present", function()
+        local c, me = remoteChar(), pawn()
+        check(c ~= nil, "REMOTE %s the other player's character is here (%s, dist %s m)", phase, tostring(c and className(c)), (c and me) and distM(me, c) or "?")
+    end)
+end
+local function vmTouchdown(phase)
+    step(phase .. ": client touchdown", function()
+        say("VMKEY %s requesting Enter in the VM (the client's touchdown)", phase)
+        local done, t = request("vmkey ENTER"), os.clock() + 45
+        return function() return done() or os.clock() > t end, 50, "client touchdown key"
+    end)
+    settle(phase .. " client", 8)
+end
+-- One window. whistle: ask the VM to whistle, wait for its WhistleALL here, record PAIR_TAIL_S more.
+local function pairWindow(phase, label, whistle)
+    step(phase .. ": " .. label, function()
+        local st = { try = 0, restartAt = nil }
+        local function start()
+            st.try = st.try + 1
+            local w, a = world(), amb()
+            local okS, errS = pcall(function() a:StartRecordingOutput(w, PAIR_MAX_S, nil) end)
+            check(okS, "REC %s %s started try %d (%s)", phase, label, st.try, okS and "StartRecordingOutput" or tostring(errS))
+            S.rec = { label = label, t0 = os.clock(), remote = nil }
+            if whistle then request("vmkey whistle") say("VMKEY %s %s requesting the client's whistle (try %d) Volume=%s", phase, label, st.try, fmtVol(volume())) end
+        end
+        local function stop()
+            local w, a = world(), amb()
+            local name = "whistle-" .. label
+            local okT, errT = pcall(function() a:StopRecordingOutput(w, WAV_EXPORT, name, scriptDir, nil, nil) end)
+            S.rec = nil
+            return okT, errT, name
+        end
+        start()
+        return function()
+            if st.restartAt then
+                if os.clock() < st.restartAt then return false end
+                st.restartAt = nil
+                start()
+                return false
+            end
+            local r = S.rec
+            if not r then return true end
+            local t = os.clock() - r.t0
+            if not whistle then
+                if t < PAIR_QUIET_S then return false end
+                local okT, errT, name = stop()
+                check(okT, "REC %s %s stopped -> %s\\%s.wav (%s)", phase, label, scriptDir, name, okT and "StopRecordingOutput" or tostring(errT))
+                return true
+            end
+            if r.remote then
+                if t < r.remote + PAIR_TAIL_S then return false end
+                local at = r.remote
+                local okT, errT, name = stop()
+                check(okT, "REC %s %s stopped -> %s\\%s.wav (%s)", phase, label, scriptDir, name, okT and "StopRecordingOutput" or tostring(errT))
+                check(true, "CLIENTWHISTLE %s %s the client's whistle played here at %.2f s into the recording (try %d)", phase, label, at, st.try)
+                return true
+            end
+            if t < PAIR_WAIT_S then return false end
+            stop()
+            if st.try < PAIR_TRIES then
+                say("MISSED %s %s no client whistle within %.0f s (try %d of %d); again", phase, label, PAIR_WAIT_S, st.try, PAIR_TRIES)
+                st.restartAt = os.clock() + 2
+                return false
+            end
+            check(false, "CLIENTWHISTLE %s %s no client whistle in %d tries", phase, label, PAIR_TRIES)
+            return true
+        end, PAIR_TRIES * (PAIR_WAIT_S + PAIR_TAIL_S + 3) + 10, phase .. " window " .. label
+    end)
+    settle(phase .. " gap " .. label, GAP_S)
+end
+
+local function buildPairListen()
+    waitMatch("pair", 900)
+    softTouchdown("pair")
+    waitPawn("pair", 120)
+    hookWhistle("pair")
+    keymap("pair")
+    checkVolume("pair")
+    waitRemote("pair", 600)
+    vmTouchdown("pair")
+    pairWindow("pair", "quiet1", false)
+    pairWindow("pair", "muted", true)
+    setVolume("pair", "stock")
+    pairWindow("pair", "loud", true)
+    setVolume("pair", "muted")
+    pairWindow("pair", "muted2", true)
+    pairWindow("pair", "quiet2", false)
+    checkVolume("pair")
+end
+
 local function buildMatch()
     waitWorld("menu1", MENU_MAP, 120)
     settle("menu1", 3)
@@ -272,7 +483,7 @@ if MAP_BAD then
     say("END result=FAIL checks=0 failures=1 reason=unknown-map %s", MAP_BAD)
     return
 end
-local build = ({ match = buildMatch })[SCENARIO]
+local build = ({ match = buildMatch, ["pair-listen"] = buildPairListen })[SCENARIO]
 if not build then
     say("END result=FAIL checks=0 failures=1 reason=unknown-scenario %s", SCENARIO)
     return

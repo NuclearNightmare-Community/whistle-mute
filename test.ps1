@@ -29,7 +29,7 @@ try {
         }
     }
     if ($Only -in 'all', 'ps') {
-        foreach ($t in 'wav_test', 'deploy_test', 'check_test', 'run_guard_test') {
+        foreach ($t in 'wav_test', 'deploy_test', 'check_test', 'pair_test', 'run_guard_test') {
             & pwsh -NoProfile -NonInteractive -File "test/unit/$t.ps1"
             if ($LASTEXITCODE -ne 0) { $failed += $t }
         }

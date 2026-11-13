@@ -22,7 +22,7 @@
 param(
     [Parameter(Mandatory)] [string] $Instance,
     [switch] $Test,
-    [ValidateSet('match')] [string] $Scenario = 'match',
+    [ValidateSet('match', 'pair-listen')] [string] $Scenario = 'match',
     [ValidateSet('', 'LowIsland', 'TowerIsland', 'Forest', 'Crevasse', IgnoreCase = $false)] [string] $Map = '',
     [switch] $Remove,
     [switch] $Staged

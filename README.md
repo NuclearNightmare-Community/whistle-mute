@@ -123,7 +123,7 @@ available on this PC with the VM running (need 7 GB before launching the host ga
 left open on the host (about 8 GB private) held the memory. B never joined, so nothing was judged (`ScenarioReport`
 `Verdict FAIL`, `Note: not judged: B never joined`): no muted/loud dB, no `HEARD` lines. `pair.ps1 -Stop` afterwards;
 the host copy had no WhistleMute or driver left and the VM copy was back to UE4SS off. Result:
-`dumps8.2.3-build26601774\pair\wm-listen-20261112-222724.json`. Not retried: the same memory would fail the same
+`dumps\v8.2.3-build26601774\pair\wm-listen-20261112-222724.json`. Not retried: the same memory would fail the same
 way. Next: run it again with no editor open on the host.
 
 Untested parts, which the first run settles: whether the game takes the whistle key and Enter (touchdown) posted to

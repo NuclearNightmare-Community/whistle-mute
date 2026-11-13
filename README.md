@@ -117,6 +117,15 @@ about 10 minutes:
 ./check.ps1 -Log <...>\dumps\<copy>\pair\<label>.host.UE4SS.log -Scenario pair-listen -WavDir <...>\dumps\<copy>\pair\<label>-wav   # again, by hand
 ```
 
+**Run 1 (2026-11-12 night, V8.2.3, host copy `v8.2.3-build26601774`, VM copy on the same build): INCONCLUSIVE, not
+run (environment, not the mod).** `pair.ps1` stopped before launching the host game: `ERROR: Only 4.7 GB of memory
+available on this PC with the VM running (need 7 GB before launching the host game); not launching.` An Unreal Editor
+left open on the host (about 8 GB private) held the memory. B never joined, so nothing was judged (`ScenarioReport`
+`Verdict FAIL`, `Note: not judged: B never joined`): no muted/loud dB, no `HEARD` lines. `pair.ps1 -Stop` afterwards;
+the host copy had no WhistleMute or driver left and the VM copy was back to UE4SS off. Result:
+`dumps8.2.3-build26601774\pair\wm-listen-20261112-222724.json`. Not retried: the same memory would fail the same
+way. Next: run it again with no editor open on the host.
+
 Untested parts, which the first run settles: whether the game takes the whistle key and Enter (touchdown) posted to
 the VM's window (B5 proved posted keys for the chat key only), whether the whistle works in the lobby for a client as
 it does for the host, and how far apart the two characters stand there.

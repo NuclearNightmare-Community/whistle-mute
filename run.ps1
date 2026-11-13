@@ -18,8 +18,8 @@
   into the game while it runs. Sound must not be muted in the game's settings (the stock whistle must reach the
   recording, or check.ps1 fails the run as inconclusive).
 .EXAMPLE
-  ./run.ps1 -Instance C:\...\nuclear-nightmare\game-instances\v8.2-build26512322
-  ./run.ps1 -Instance C:\...\nuclear-nightmare\game-instances\v8.2-build26512322 -Map Forest
+  ./run.ps1 -Instance C:\...\nuclear-nightmare\game-instances\v8.2.3-build26601774
+  ./run.ps1 -Instance C:\...\nuclear-nightmare\game-instances\v8.2.3-build26601774 -Map Forest
 #>
 param(
     [Parameter(Mandatory)] [string] $Instance,

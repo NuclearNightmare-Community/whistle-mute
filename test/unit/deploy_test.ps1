@@ -92,7 +92,8 @@ try {
     Ok ($m.version -match '^\d+\.\d+\.\d+$') 'mod.json: semver'
     Eq $m.scope 'client' 'mod.json: scope client'
     Eq @($m.dependsOn).Count 0 'mod.json: standalone (no dependsOn)'
-    Eq $m.game.build '26512322' 'mod.json: game build'
+    Eq $m.game.version 'V8.2.3' 'mod.json: game version'
+    Eq $m.game.build '26601774' 'mod.json: game build'
     Eq $m.ue4ss 'v3.0.1-1181-g83330635' 'mod.json: the pinned UE4SS'
     $main = Get-Content (Join-Path $repo 'Scripts\main.lua') -Raw
     Ok ($main -match "local ME, VERSION = `"$([regex]::Escape($m.name))`", `"$([regex]::Escape($m.version))`"") 'main.lua: name and version match mod.json'

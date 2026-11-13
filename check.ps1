@@ -15,8 +15,8 @@
     unit   needs no log: runs test.ps1.
   Exit code 1 when any check fails; otherwise prints "All checks passed."
 .EXAMPLE
-  ./check.ps1 -Log C:\...\nuclear-nightmare\dumps\v8.2-build26512322\whistlemute\match.log -Scenario match
-  ./check.ps1 -Instance C:\...\nuclear-nightmare\game-instances\v8.2-build26512322 -Scenario hand
+  ./check.ps1 -Log C:\...\nuclear-nightmare\dumps\v8.2.3-build26601774\whistlemute\match.log -Scenario match
+  ./check.ps1 -Instance C:\...\nuclear-nightmare\game-instances\v8.2.3-build26601774 -Scenario hand
 #>
 param(
     [string] $Instance,

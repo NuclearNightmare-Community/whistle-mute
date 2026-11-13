@@ -4,8 +4,8 @@ A client mod for Nuclear Nightmare (V8.2.3, build 26601774; UE4SS `v3.0.1-1181-g
 silent for the player who has it, from anyone. Other players hear everything as before. Standalone (no Nucleus) and
 ships no asset. Spec: `_bmad-output/specs/spec-small-mods-v1/` in the workspace (story 1, CAP-1 and CAP-3).
 
-**Status: offline tests pass; in-game check passed on V8.2.3 (2026-11-12, below).** A pair run by ear (open
-question 3) is not done.
+**Status: offline tests pass; in-game check passed on V8.2.3 (2026-11-12, below).** The two-player check of
+another player's whistle (open question 3) is scripted (`wm-listen`, below) but not yet run.
 
 ## How it works
 
@@ -37,8 +37,11 @@ Log lines (`[WhistleMute]` in `UE4SS.log`):
 
 Offline (no game): `./test.ps1`, or `./check.ps1 -Scenario unit`. It covers `mute.lua` against a fake game,
 `main.lua` against fake UE4SS globals, a load test of the driver, `wav-lib.ps1` on synthetic recordings, `deploy.ps1`
-against a fake copy, `check.ps1` against synthetic logs and recordings, and `run.ps1`'s run guard. Counts at the
-first commit: Lua 40 + 29 + 23, PowerShell 21 + 42 + 22 + 12.
+against a fake copy, `check.ps1` against synthetic logs and recordings, the pair scenario file
+(`test/unit/pair_test.ps1`: it parses and loads in `pair.ps1`'s shape, its stage, the request whitelist, the whistle
+key, the request server against a fake host copy, the recordings' copy and its Check), and `run.ps1`'s run guard.
+Counts at the first commit: Lua 40 + 29 + 23, PowerShell 21 + 42 + 22 + 12. With the pair scenario: Lua 40 + 29 + 57,
+PowerShell 21 + 45 + 35 + 62 + 13.
 
 ### In game
 
@@ -73,6 +76,50 @@ passing. It also prints what the run says about the SPEC's open questions.
 
 `-Map LowIsland|Forest|Crevasse` runs the same scenario on another map. Per AGENTS.md "Test runs", use it only to
 prove the mod on every map once (the SPEC's "silent on every map tried"), not for routine checks.
+
+### Two players: another player's whistle (`wm-listen`)
+
+The solo run proves this machine's own whistle. Every whistle, anyone's, reaches a machine as the same `WhistleALL`
+playing the same wave, but the user's priority is other players' whistles, so `test/pair/whistle-scenarios.ps1` adds
+the scenario `wm-listen` to the workspace's `tools/vm/pair.ps1` (`tools/vm/README.md`):
+
+- **A, the host (this PC):** WhistleMute and `WhistleMuteDriver` with the scenario `pair-listen`, installed for the run
+  only (staged by `deploy.ps1 -Test -Scenario pair-listen -Staged`; `pair.ps1` removes them afterwards).
+  PairDriver makes the friends-only lobby as in every pair run.
+- **B, the VM:** vanilla (UE4SS off). It whistles with its own whistle key, posted by `vm-key.ps1`: the real player
+  path (`IA_Whistle` → `WhistleServer`, a server RPC to A → `WhistleALL` on every machine). B's mods can't change what
+  A hears, so a vanilla B also shows the mod is needed only on the listening machine.
+- **What A's driver does:** it hooks `WhistleALL` (each call logs `HEARD <window> remote|local at <s> dist=<m>`: whose
+  whistle, when, how far), logs the whistle key from the game's input mapping (`KEYMAP`), waits for B's character,
+  asks for B's touchdown, then records five windows of A's audio output: `quiet1`, `muted` (B whistles; Volume 0),
+  `loud` (B whistles; the stock Volume put back: the control), `muted2` (Volume 0 again), `quiet2`. A whistle window
+  asks for B's whistle, waits up to 15 s for B's `WhistleALL` on A, records 3 s more, and tries up to 3 times.
+- **What `pair.ps1` does for it:** `AfterJoin` serves the driver's `request.txt` (only `key ENTER` for A's touchdown,
+  `vmkey ENTER` for B's, `vmkey whistle` for B's whistle key), re-checks the friends-only flags while it does, and when
+  the driver logs `END` copies the recordings to `dumps\<copy>\pair\<label>-wav\`.
+- **Verdict** (`ScenarioReport.Verdict` in `dumps\<copy>\pair\<label>.json`): `check.ps1 -Scenario pair-listen` on A's
+  log and those recordings. PASS needs B's whistle seen on A in `muted`, `loud` and `muted2` and in no quiet window,
+  no whistle of A's own in any window, B's stock whistle audible in `loud` (at least 6 dB over the quiet windows) and
+  at most 10% of it left in both `muted` windows. INCONCLUSIVE when B's stock whistle isn't audible on A at all (the
+  characters too far apart: the whistle is attenuated with the game's `ATT_Generators`, and `dist=` says how far B
+  was; or no sound device); FAIL otherwise.
+
+Before it: no `WhistleMute` or `WhistleMuteDriver` in the host copy (`./deploy.ps1 -Instance <copy> -Remove`; the
+scenario refuses otherwise), nobody playing on the host, the VM lock taken (`tools/vm/README.md`, "Memory and the VM
+lock"), the host's game sound on with an output device (as for the solo run), and the VM copy on the host's build.
+Nucleus isn't needed and doesn't need to be removed (WhistleMute is standalone). From the workspace's main checkout,
+about 10 minutes:
+
+```powershell
+./tools/vm/pair.ps1 -Scenario wm-listen -ScenarioFile mods/whistle-mute/test/pair/whistle-scenarios.ps1
+./tools/vm/pair.ps1 -Scenario wm-listen -ScenarioFile mods/whistle-mute/test/pair/whistle-scenarios.ps1 -ScenarioArgs @{ WhistleKey = 'G' }   # if no KEYMAP line names a postable key
+./tools/vm/pair.ps1 -Stop -Scenario wm-listen -ScenarioFile mods/whistle-mute/test/pair/whistle-scenarios.ps1                              # after an aborted run
+./check.ps1 -Log <...>\dumps\<copy>\pair\<label>.host.UE4SS.log -Scenario pair-listen -WavDir <...>\dumps\<copy>\pair\<label>-wav   # again, by hand
+```
+
+Untested parts, which the first run settles: whether the game takes the whistle key and Enter (touchdown) posted to
+the VM's window (B5 proved posted keys for the chat key only), whether the whistle works in the lobby for a client as
+it does for the host, and how far apart the two characters stand there.
 
 A hand check without the driver: play with the mod deployed, then
 `./check.ps1 -Instance <copy> -Scenario hand` (loaded once, at least one `MUTED`, no `WARN`, no script error).
@@ -123,8 +170,8 @@ These come from the SPEC. The V8.2.1 dumps answer some of them in advance; the r
 3. **Does a solo run prove that another player's whistle is silent, or does that need a pair run?** By the code path
    (point 1) a solo run should be enough. A friends-only pair run would confirm it by ear: install the mod only on the
    listening machine, have the other player whistle nearby, and check that the listener hears nothing and the
-   whistler hears their own whistle. No pair scenario is scripted. **Your call:** is that hand check needed before
-   release?
+   whistler hears their own whistle. **Now scripted** as `wm-listen` (above), by recording rather than by ear, with
+   the stock-Volume control in the same run; not yet run.
 4. **The game's own Volume.** The test driver reads the wave's stock Volume in a LoadMap pre-hook, before the mod
    sets it, and falls back to 1.0 if it never sees a non-zero value. The `loud` recording uses that value.
 
@@ -135,8 +182,9 @@ These come from the SPEC. The V8.2.1 dumps answer some of them in advance; the r
 - `Scripts/mute.lua`: the logic (once per map, read-back, bounded retries).
 - `deploy.ps1`, `deploy-lib.ps1`: install and remove, edit `mods.txt`.
 - `run.ps1`, `check.ps1`, `wav-lib.ps1`: the in-game run, its verdict, and reading the recordings.
-- `test/WhistleMuteDriver/`: the test driver (never shipped). `test/unit/`: the offline tests. `test.ps1` runs them.
+- `test/WhistleMuteDriver/`: the test driver (never shipped). `test/pair/whistle-scenarios.ps1`: the two-player
+  scenario for the workspace's `tools/vm/pair.ps1`. `test/unit/`: the offline tests. `test.ps1` runs them.
 
 Game symbols this mod and its driver rely on are listed in the workspace's `tools/diff-dumps.watch.json` (mod:
-`/Game/Sounds/Whistle01` and `SoundWave.Volume`; driver: `WhistleServer`, AudioMixer recording,
-`CollectGarbage`).
+`/Game/Sounds/Whistle01` and `SoundWave.Volume`; driver: `WhistleServer`, `WhistleALL` (hooked in `pair-listen`),
+`IsLocallyControlled`, the `IA_Whistle` input action, AudioMixer recording, `CollectGarbage`).

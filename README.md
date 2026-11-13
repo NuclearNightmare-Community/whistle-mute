@@ -1,10 +1,11 @@
 # WhistleMute
 
-A client mod for Nuclear Nightmare (V8.2.1, build 26512322; UE4SS `v3.0.1-1181-g83330635`): the whistle emote is
+A client mod for Nuclear Nightmare (V8.2.3, build 26601774; UE4SS `v3.0.1-1181-g83330635`): the whistle emote is
 silent for the player who has it, from anyone. Other players hear everything as before. Standalone (no Nucleus) and
 ships no asset. Spec: `_bmad-output/specs/spec-small-mods-v1/` in the workspace (story 1, CAP-1 and CAP-3).
 
-**Status: offline tests pass; not yet run in game.** The in-game checks below are what remains.
+**Status: offline tests pass; in-game check passed on V8.2.3 (2026-11-12, below).** A pair run by ear (open
+question 3) is not done.
 
 ## How it works
 
@@ -25,8 +26,8 @@ Log lines (`[WhistleMute]` in `UE4SS.log`):
 ## Install
 
 ```powershell
-./deploy.ps1 -Instance C:\...\nuclear-nightmare\game-instances\v8.2-build26512322           # install
-./deploy.ps1 -Instance C:\...\nuclear-nightmare\game-instances\v8.2-build26512322 -Remove   # uninstall
+./deploy.ps1 -Instance C:\...\nuclear-nightmare\game-instances\v8.2.3-build26601774           # install
+./deploy.ps1 -Instance C:\...\nuclear-nightmare\game-instances\v8.2.3-build26601774 -Remove   # uninstall
 ```
 
 `deploy.ps1` puts `Mods/WhistleMute/{mod.json, Scripts/main.lua, Scripts/mute.lua}` in the copy and the line
@@ -39,12 +40,12 @@ Offline (no game): `./test.ps1`, or `./check.ps1 -Scenario unit`. It covers `mut
 against a fake copy, `check.ps1` against synthetic logs and recordings, and `run.ps1`'s run guard. Counts at the
 first commit: Lua 40 + 29 + 23, PowerShell 21 + 42 + 22 + 12.
 
-### In game: what remains
+### In game
 
 One launch, host only, Tower Island (the routine map), and with the game's sound on:
 
 ```powershell
-./run.ps1 -Instance C:\...\nuclear-nightmare\game-instances\v8.2-build26512322
+./run.ps1 -Instance C:\...\nuclear-nightmare\game-instances\v8.2.3-build26601774
 ```
 
 It deploys with the test driver `WhistleMuteDriver` (its `mods.txt` line just above the mod's), launches through
@@ -75,6 +76,37 @@ prove the mod on every map once (the SPEC's "silent on every map tried"), not fo
 
 A hand check without the driver: play with the mod deployed, then
 `./check.ps1 -Instance <copy> -Scenario hand` (loaded once, at least one `MUTED`, no `WARN`, no script error).
+
+### Results
+
+**2026-11-12, V8.2.3 (build 26601774), copy `game-instances/v8.2.3-build26601774`: PASS.** `./run.ps1`, scenario
+`match` on Tower Island (`SmallMap?listen`, host only), 70 s; the driver logged `END result=PASS checks=13
+failures=0` and `check.ps1` printed "All checks passed." Key lines of its output:
+
+```text
+[WhistleMute] MUTED map=GraphicsWarmup was=1.00 now=0.00 (first try)
+[WhistleMute] MUTED map=NewMainMenu was=0.00 now=0.00 (first try)
+[WhistleMute] MUTED map=SmallMap was=0.00 now=0.00 (first try)
+[WhistleMuteDriver] OK VOLUME menu1 Whistle01 Volume=0.00 (the mod's 0)
+[WhistleMuteDriver] OK VOLUME match1 Whistle01 Volume=0.00 (the mod's 0)
+[WhistleMuteDriver] OK VOLUME menu2 Whistle01 Volume=0.00 (the mod's 0)
+[WhistleMuteDriver] WHISTLE match1 muted at 0.51 s Volume=0.00 ok=true
+[WhistleMuteDriver] OK SETVOL match1 stock Volume=1.00 (stock seen before the mod: 1.00)
+[WhistleMuteDriver] AFTERGC match1 Whistle01 loaded Volume=0.00
+[WhistleMuteDriver] END result=PASS checks=13 failures=0
+--- checks (match) ---
+ok:   !\[WhistleMute\] WARN 
+ok:   ?!\[WhistleMute\] MISS 
+ok:   the stock whistle is audible in the recording: loud +10.7 dB over noise, muted -12.1 dB over noise (whistle left: -inf dB of stock); hf energy quiet1=8.66E-008 quiet2=4.25E-005 muted=2.65E-006 loud=4.97E-004
+ok:   with the mod's Volume 0 the whistle is silent: loud +10.7 dB over noise, muted -12.1 dB over noise (whistle left: -inf dB of stock); hf energy quiet1=8.66E-008 quiet2=4.25E-005 muted=2.65E-006 loud=4.97E-004
+```
+
+All 26 `ok:` checks passed (among them no script error, hook removal or traceback).
+
+What it says about the open questions: `Whistle01` was loaded at every LoadMap (no `MISS`); the Volume before the
+mod set it was 1.00 at `GraphicsWarmup` and 0.00 at every later map, so a map change did not reset it; after a
+forced garbage collection the wave was still loaded with Volume 0.00. Point 3 (a remote player's whistle, by ear in
+a pair run) remains open.
 
 ## Open questions
 

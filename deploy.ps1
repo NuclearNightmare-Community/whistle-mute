@@ -15,9 +15,9 @@
   skipped.
   Pass the main checkout's instance path when running from a worktree.
 .EXAMPLE
-  ./deploy.ps1 -Instance C:\...\nuclear-nightmare\game-instances\v8.2-build26512322
-  ./deploy.ps1 -Instance C:\...\nuclear-nightmare\game-instances\v8.2-build26512322 -Test -Scenario match
-  ./deploy.ps1 -Instance C:\...\nuclear-nightmare\game-instances\v8.2-build26512322 -Remove
+  ./deploy.ps1 -Instance C:\...\nuclear-nightmare\game-instances\v8.2.3-build26601774
+  ./deploy.ps1 -Instance C:\...\nuclear-nightmare\game-instances\v8.2.3-build26601774 -Test -Scenario match
+  ./deploy.ps1 -Instance C:\...\nuclear-nightmare\game-instances\v8.2.3-build26601774 -Remove
 #>
 param(
     [Parameter(Mandatory)] [string] $Instance,

@@ -5,5 +5,6 @@
   "scope": "client",
   "game": { "version": "V8.2.3", "build": "26601774" },
   "ue4ss": "v3.0.1-1181-g83330635",
-  "dependsOn": []
+  "dependsOn": [],
+  "license": "MIT"
 }

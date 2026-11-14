@@ -5,7 +5,8 @@ silent for the player who has it, from anyone. Other players hear everything as 
 ships no asset. Spec: `_bmad-output/specs/spec-small-mods-v1/` in the workspace (story 1, CAP-1 and CAP-3).
 
 **Status: offline tests pass; in-game check passed on V8.2.3 (2026-11-12, below).** The two-player check of
-another player's whistle (open question 3) is scripted (`wm-listen`, below) but not yet run.
+another player's whistle (open question 3) is scripted (`wm-listen`, below) but not yet run. License: MIT (`LICENSE`);
+changes: `CHANGELOG.md`; `build.ps1` stages the release package for the workspace's `tools/release/release.ps1`.
 
 ## How it works
 

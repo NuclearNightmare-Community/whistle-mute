@@ -39,7 +39,7 @@ $win64    = Join-Path $inst 'NuclearNightmare\Binaries\Win64'
 $ue4ss    = Join-Path $win64 'ue4ss'
 $modsDir  = Join-Path $ue4ss 'Mods'
 $modsTxt  = Join-Path $modsDir 'mods.txt'
-$files    = 'main.lua', 'mute.lua'
+$files    = $ModScripts
 
 function Stop-Deploy([string] $why) { Write-Host "$name not deployed: $why"; exit 1 }
 

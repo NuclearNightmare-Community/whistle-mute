@@ -4,6 +4,10 @@
   that keeps the file's bytes when nothing changes. Same rules as ImposterPanelFix's deploy-lib.ps1.
 #>
 
+# The Scripts/ files a deploy installs and a release ships under ue4ss/Mods/<name>/Scripts/ (deploy.ps1 and
+# build.ps1 both use this list).
+$ModScripts = 'main.lua', 'mute.lua'
+
 # Edit-ModsTxt -Lines <mods.txt lines> -Remove <names> -Add <names in order> -> new lines.
 # Drops every line of each name in -Remove and -Add (enabled or not), then inserts "<name> : 1" for each of -Add, in
 # order, right above "Keybinds : 1" (AGENTS.md: never appended at the end), or at the end only when there is no

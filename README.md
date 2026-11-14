@@ -18,7 +18,7 @@ the wave isn't loaded yet it retries 3 times, 5 s apart, within that map only.
 
 Log lines (`[WhistleMute]` in `UE4SS.log`):
 
-- `loaded 0.1.0 (...)` once at start.
+- `loaded 0.2.0 (...)` once at start.
 - `MUTED map=<map> was=<volume> now=0.00 (first try | retry N)` per map. `was` is the Volume before the mod set it, so
   it shows whether a map change reset it.
 - `MISS map=<map> ... retry N/3 in 5 s`: the wave wasn't loaded at that moment.

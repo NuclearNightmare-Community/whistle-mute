@@ -1,4 +1,4 @@
--- WhistleMute 0.1.0: the whistle emote is silent for this player, from anyone (scope client; ships no asset).
+-- WhistleMute 0.2.0: the whistle emote is silent for this player, from anyone (scope client; ships no asset).
 -- Standalone UE4SS Lua mod. The logic is in mute.lua; this file is the UE4SS glue: the game adapter and the LoadMap
 -- post-hook.
 --
@@ -7,7 +7,7 @@
 -- machine silences every whistle here and nowhere else. Once per map; no UObject is kept between calls (the wave is
 -- looked up again each time), and nothing from another player is read.
 -- Safety (AGENTS.md): every game call is in pcall, so is the hook body; a failure is logged once per map.
-local ME, VERSION = "WhistleMute", "0.1.0"
+local ME, VERSION = "WhistleMute", "0.2.0"
 local KSL_CDO = "/Script/Engine.Default__KismetSystemLibrary"
 local KSL_ISVALID = "/Script/Engine.KismetSystemLibrary:IsValid"
 

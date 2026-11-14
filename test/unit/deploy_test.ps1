@@ -91,7 +91,7 @@ try {
     # The manifest: every field AGENTS.md requires, the SPEC's scope, no dependency, the naming convention.
     $m = Get-Content (Join-Path $repo 'mod.json') -Raw | ConvertFrom-Json
     foreach ($k in 'id', 'name', 'version', 'scope', 'game', 'ue4ss', 'dependsOn') { Ok ($null -ne $m.$k) "mod.json: has $k" }
-    Eq $m.id 'whistle-mute' 'mod.json: id (lowercase, the repo folder)'
+    Eq $m.id 'nuclearnightmare-community.whistle-mute' 'mod.json: id (nuclearnightmare-community.<repo folder>, distribution story 13)'
     Eq $m.name $N 'mod.json: name (capitalized)'
     Ok ($m.version -match '^\d+\.\d+\.\d+$') 'mod.json: semver'
     Eq $m.scope 'client' 'mod.json: scope client'

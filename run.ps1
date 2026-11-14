@@ -36,7 +36,9 @@ $driver   = "${name}Driver"
 $inst     = (Resolve-Path $Instance).Path
 $root     = Split-Path (Split-Path $inst)
 . (Join-Path $root 'tools\run-guard\run-guard.ps1')
-$outDir   = Join-Path $root "dumps\$(Split-Path $inst -Leaf)\$($manifest.id)"
+# The id's mod part (the repo folder): the run-guard group in tools/run-guard/test-mods.json and the dumps folder.
+$modPart  = $manifest.id.Substring($manifest.id.LastIndexOf('.') + 1)
+$outDir   = Join-Path $root "dumps\$(Split-Path $inst -Leaf)\$modPart"
 $logBase  = if ($Map) { "$Scenario-$Map" } else { $Scenario }
 $ue4ss    = Join-Path $inst 'NuclearNightmare\Binaries\Win64\ue4ss'
 $log      = Join-Path $ue4ss 'UE4SS.log'
@@ -44,7 +46,7 @@ $scripts  = Join-Path $ue4ss "Mods\$driver\Scripts"
 $exeName  = 'NuclearNightmare-Win64-Shipping'
 
 # A test mod another runner left enabled would fail this run in confusing ways.
-$refusal = Get-RunGuardRefusal -Workspace $root -Instance $inst -Owner $manifest.id -Bypass:$AllowOtherDrivers
+$refusal = Get-RunGuardRefusal -Workspace $root -Instance $inst -Owner $modPart -Bypass:$AllowOtherDrivers
 if ($refusal) { Write-Host $refusal; exit 1 }
 if (Get-Process -Name 'NuclearNightmare*' -ErrorAction SilentlyContinue) { throw 'Nuclear Nightmare is already running (a dev copy or the real game); not launching.' }
 

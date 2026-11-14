@@ -11,7 +11,7 @@
 $ErrorActionPreference = 'Stop'
 $repo = Split-Path (Split-Path $PSScriptRoot)
 $manifest = Get-Content (Join-Path $repo 'mod.json') -Raw | ConvertFrom-Json
-$Owner = $manifest.id
+$Owner = $manifest.id.Substring($manifest.id.LastIndexOf('.') + 1) # the id's mod part, as run.ps1's modPart
 $Own = @("$($manifest.name)Driver")
 $Foreign = 'WaypointsDriver'; $ForeignRepo = 'waypoints'
 
@@ -88,7 +88,7 @@ try {
     $running = $text.IndexOf("if (Get-Process -Name 'NuclearNightmare*'")
     $deploy = $text.IndexOf("'deploy.ps1')")
     Ok ($hostAt -gt 0 -and $running -gt $hostAt -and $deploy -gt $running -and $text.LastIndexOf("tools\launch.ps1')") -gt $deploy) 'guard before the running-game check, deploy and launch'
-    Ok ($text -match '-Owner \$manifest\.id ') "guard: this repo's group (mod.json id '$Owner')"
+    Ok ($text -match '-Owner \$modPart ') "guard: this repo's group (mod.json id's mod part '$Owner')"
     $real = Get-Content (Join-Path $wsReal 'tools\run-guard\test-mods.json') -Raw | ConvertFrom-Json
     $group = @($real.groups | Where-Object { $_.id -eq $Owner })
     if ($group) {

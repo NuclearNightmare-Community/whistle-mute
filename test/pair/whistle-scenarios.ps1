@@ -156,7 +156,7 @@ $script:WmPairScenarios = @{
             $script:WmWavDir = Copy-WmRecordings
             Save-ShotAt -Seconds 1 -Name 'after' -Expect 'B in the lobby next to A, nothing unusual'
         }
-        PlaySec = 20; LobbyMinutes = 6
+        LobbyOnly = $true; LobbyMinutes = 6   # the whistle test happens in the lobby; pair.ps1 then passes without a match start
         Check = {
             if ($result -and -not $result.Joined) { return [ordered]@{ Verdict = 'FAIL'; Note = "not judged: B never joined (pair outcome: $($result.Outcome))" } }
             $log = Join-Path $outDir "$Label.host.UE4SS.log"

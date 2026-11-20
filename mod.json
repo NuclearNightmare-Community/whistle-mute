@@ -1,6 +1,8 @@
 {
   "id": "nuclearnightmare-community.whistle-mute",
   "name": "WhistleMute",
+  "description": "Mutes the whistle emote for you, from anyone.",
+  "categories": ["audio", "qol"],
   "version": "0.2.0",
   "scope": "client",
   "game": { "version": "V8.2.3", "build": "26601774" },

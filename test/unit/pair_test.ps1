@@ -7,6 +7,9 @@
 .EXAMPLE
   pwsh -NoProfile -File test/unit/pair_test.ps1
 #>
+# The test stubs Write-Warning to count the scenario's warnings.
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidOverwritingBuiltInCmdlets', '', Justification = 'test stub')]
+param()
 $ErrorActionPreference = 'Stop'
 $repo = Split-Path (Split-Path $PSScriptRoot)
 . (Join-Path $PSScriptRoot 'wavgen.ps1')

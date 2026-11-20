@@ -15,6 +15,6 @@ jobs:
   ci:
     permissions:
       contents: read
-    uses: NuclearNightmare-Community/ci/.github/workflows/mod.yml@024d7063d1211a613bc9a5e16b950239c661dba5 # v0.1.0
+    uses: NuclearNightmare-Community/ci/.github/workflows/mod.yml@9b408cac2ff16b5f96d00bd83956d998bc1e9fd4 # v0.1.0
     with:
-      ci-ref: 024d7063d1211a613bc9a5e16b950239c661dba5
+      ci-ref: 9b408cac2ff16b5f96d00bd83956d998bc1e9fd4

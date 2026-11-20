@@ -21,6 +21,8 @@ function Ok([bool] $cond, [string] $name, $detail) {
 }
 
 # The workspace (the main checkout or a worktree of it) holds tools/run-guard above this repo.
+# CI (NN_CI=1, set by the ci workflow) has no workspace: skip there. Anywhere else a missing workspace still fails.
+if ($env:NN_CI -eq '1') { Write-Host "SKIP (CI): needs the workspace's tools/run-guard"; exit 0 }
 $wsReal = $repo
 while ($wsReal -and -not (Test-Path (Join-Path $wsReal 'tools\run-guard\run-guard.ps1'))) { $wsReal = Split-Path $wsReal }
 if (-not $wsReal) { Write-Host "FAIL the workspace's tools/run-guard/run-guard.ps1 was not found above $repo"; exit 1 }

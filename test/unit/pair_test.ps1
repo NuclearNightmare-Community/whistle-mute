@@ -126,7 +126,7 @@ try {
     New-TestWav (Join-Path $dst 'whistle-loud.wav') -Whistle 0.3 -Seed 9
     $t = 0
     function L([string] $msg) { $script:t++; "[2026-11-12 01:00:00.{0:D7}] [Lua] $msg" -f $script:t }
-    $log = @((L "[WhistleMute] loaded 0.2.0 (x)"), (L '[WhistleMuteDriver] SCENARIO pair-listen'), (L '[WhistleMute] MUTED map=SmallMap was=0.00 now=0.00 (first try)'),
+    $log = @((L "[WhistleMute] loaded 0.2.1 (x)"), (L '[WhistleMuteDriver] SCENARIO pair-listen'), (L '[WhistleMute] MUTED map=SmallMap was=0.00 now=0.00 (first try)'),
         (L '[WhistleMuteDriver] OK HOOK pair WhistleALL post-hook'), (L '[WhistleMuteDriver] OK REMOTE pair the other player''s character is here (BP_FirstPersonCharacter_C, dist 3.0 m)'),
         (L '[WhistleMuteDriver] OK VOLUME pair Whistle01 Volume=0.00 (the mod''s 0)'), (L '[WhistleMuteDriver] OK VOLUME pair Whistle01 Volume=0.00 (the mod''s 0)'),
         (L '[WhistleMuteDriver] OK SETVOL pair stock Volume=1.00 (stock seen before the mod: 1.00)'), (L '[WhistleMuteDriver] OK SETVOL pair muted Volume=0.00 (stock seen before the mod: 1.00)'))

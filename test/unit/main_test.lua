@@ -47,7 +47,7 @@ local function lines(pat) local n = 0 for _, l in ipairs(U.out) do if l:match(pa
 -- 1. Load: one line, the hook registered, no game call yet.
 boot()
 eq(#U.out, 1, "load: one line")
-eq(U.out[1], "[WhistleMute] loaded 0.2.0 (mutes the whistle emote: /Game/Sounds/Whistle01.Whistle01 Volume 0, once per map)", "load: the load line")
+eq(U.out[1], "[WhistleMute] loaded 0.2.1 (mutes the whistle emote: /Game/Sounds/Whistle01.Whistle01 Volume 0, once per map)", "load: the load line")
 ok(U.loadMap ~= nil, "load: a LoadMap post-hook")
 eq(#U.finds, 0, "load: no lookup at load")
 
@@ -121,6 +121,6 @@ eq(lines("^%[WhistleMute%] loaded "), 1, "no hook: still the load line")
 local src = assert(io.open(MAIN)):read("*a")
 ok(not src:find("LoopAsync", 1, true), "source: no LoopAsync")
 ok(not src:find("ExecuteInGameThread%(") , "source: no ExecuteInGameThread (only the WithDelay form)")
-ok(src:find('local ME, VERSION = "WhistleMute", "0.2.0"', 1, true) ~= nil, "source: name and version")
+ok(src:find('local ME, VERSION = "WhistleMute", "0.2.1"', 1, true) ~= nil, "source: name and version")
 
 T.done()

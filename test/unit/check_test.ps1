@@ -50,7 +50,7 @@ function Expect([string[]] $log, [string] $scenario, [int] $code, [string] $name
 
 $match = @(
     (U "Starting Lua mod '$D'"), (L $D 'SCENARIO match'), (L $D 'MAP TowerIsland /Game/Maps/SmallLoweIsland/SmallMap'), (L $D 'LOADED 30 steps')
-    (U "Starting Lua mod '$M'"), (L $M 'loaded 0.2.0 (mutes the whistle emote: /Game/Sounds/Whistle01.Whistle01 Volume 0, once per map)')
+    (U "Starting Lua mod '$M'"), (L $M 'loaded 0.2.1 (mutes the whistle emote: /Game/Sounds/Whistle01.Whistle01 Volume 0, once per map)')
     (L $D 'PRELOAD n=1 Volume=1.00'), (L $M 'MUTED map=GraphicsWarmup was=1.00 now=0.00 (first try)')
     (L $D 'PRELOAD n=2 Volume=0.00'), (L $M 'MUTED map=NewMainMenu was=0.00 now=0.00 (first try)')
     (L $D 'WORLD menu1 /Game/Maps/NewMainMenu.NewMainMenu'), (L $D 'OK VOLUME menu1 Whistle01 Volume=0.00 (the mod''s 0)')
@@ -83,7 +83,7 @@ Expect ($match + (L $M 'WARN could not set /Game/Sounds/Whistle01.Whistle01 Volu
 Expect ($match + (L $D 'FAIL VOLUME match1 Whistle01 Volume=1.00')) 'match' 1 'match: a driver FAIL fails'
 Expect ($match | ForEach-Object { $_ -replace 'END result=PASS', 'END result=FAIL' }) 'match' 1 'match: END FAIL fails'
 Expect ($match + (U 'stack traceback:')) 'match' 1 'match: a traceback fails'
-Expect ($match + (L $M 'loaded 0.2.0 (again)')) 'match' 1 'match: loaded twice fails'
+Expect ($match + (L $M 'loaded 0.2.1 (again)')) 'match' 1 'match: loaded twice fails'
 Expect ($match + (L $M 'MISS map=SmallMap /Game/Sounds/Whistle01.Whistle01 is not loaded (first try); retry 1/3 in 5 s')) 'match' 0 'match: a MISS is soft and answers the question' 'loaded when LoadMap fires: no on SmallMap'
 Expect (($match | Where-Object { $_ -notmatch 'MUTED map=SmallMap' }) + (L $M 'MUTED map=SmallMap was=1.00 now=0.00 (first try)')) 'match' 0 'match: a reset Volume is reported' 'a map change reset it \(SmallMap:1\.00\)'
 # The recordings.
@@ -107,7 +107,7 @@ $pheard = Copy-PairSet 'pheard' @{ 'whistle-muted' = { param($p) New-TestWav $p 
 $pnone = Copy-PairSet 'pnone' @{ 'whistle-loud' = { param($p) New-TestWav $p -Seed 9 } }
 $pair = @(
     (U "Starting Lua mod '$D'"), (L $D 'SCENARIO pair-listen'), (L $D 'MAP TowerIsland /Game/Maps/SmallLoweIsland/SmallMap'), (L $D 'LOADED 40 steps')
-    (U "Starting Lua mod '$M'"), (L $M 'loaded 0.2.0 (mutes the whistle emote: /Game/Sounds/Whistle01.Whistle01 Volume 0, once per map)')
+    (U "Starting Lua mod '$M'"), (L $M 'loaded 0.2.1 (mutes the whistle emote: /Game/Sounds/Whistle01.Whistle01 Volume 0, once per map)')
     (L $D 'PRELOAD n=1 Volume=1.00'), (L $M 'MUTED map=GraphicsWarmup was=1.00 now=0.00 (first try)')
     (L $D 'PRELOAD n=2 Volume=0.00'), (L $M 'MUTED map=NewMainMenu was=0.00 now=0.00 (first try)')
     (L $D 'PRELOAD n=3 Volume=0.00'), (L $M 'MUTED map=SmallMap was=0.00 now=0.00 (first try)')
@@ -145,7 +145,7 @@ Expect ($pair | Where-Object { $_ -notmatch 'MUTED map=SmallMap' }) 'pair-listen
 Expect ($pair | ForEach-Object { $_ -replace 'SCENARIO pair-listen', 'SCENARIO match' }) 'pair-listen' 1 'pair-listen: the match scenario''s log fails' '' $pgood
 
 # hand: a log from playing with the mod (no driver).
-$hand = @((U "Starting Lua mod '$M'"), (L $M 'loaded 0.2.0 (mutes the whistle emote: /Game/Sounds/Whistle01.Whistle01 Volume 0, once per map)'),
+$hand = @((U "Starting Lua mod '$M'"), (L $M 'loaded 0.2.1 (mutes the whistle emote: /Game/Sounds/Whistle01.Whistle01 Volume 0, once per map)'),
     (L $M 'MUTED map=NewMainMenu was=1.00 now=0.00 (first try)'))
 Expect $hand 'hand' 0 'hand: passes' 'All checks passed'
 Expect ($hand | Where-Object { $_ -notmatch 'MUTED' }) 'hand' 1 'hand: no MUTED fails'

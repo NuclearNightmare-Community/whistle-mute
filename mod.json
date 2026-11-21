@@ -1,9 +1,10 @@
 {
   "id": "nuclearnightmare-community.whistle-mute",
   "name": "WhistleMute",
-  "description": "Mutes the whistle emote for you, from anyone.",
+  "displayName": "Whistle Emote Mute",
+  "description": "Silences the whistle emote for you, from any player (others still get to be annoyed by it).",
   "categories": ["audio", "qol"],
-  "version": "0.2.0",
+  "version": "0.2.1",
   "scope": "client",
   "game": { "version": "V8.2.3", "build": "26601774" },
   "ue4ss": "v3.0.1-1181-g83330635",

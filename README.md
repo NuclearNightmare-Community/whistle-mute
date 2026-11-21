@@ -198,3 +198,7 @@ These come from the SPEC. The V8.2.1 dumps answer some of them in advance; the r
 Game symbols this mod and its driver rely on are listed in the workspace's `tools/diff-dumps.watch.json` (mod:
 `/Game/Sounds/Whistle01` and `SoundWave.Volume`; driver: `WhistleServer`, `WhistleALL` (hooked in `pair-listen`),
 `IsLocallyControlled`, the `IA_Whistle` input action, AudioMixer recording, `CollectGarbage`).
+
+## Feedback
+
+Bug reports, ideas and questions go to [NuclearNightmare-Community/feedback](https://github.com/NuclearNightmare-Community/feedback). For a security problem, please report it privately: see its [SECURITY.md](https://github.com/NuclearNightmare-Community/feedback/blob/main/SECURITY.md).
